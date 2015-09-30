@@ -254,7 +254,7 @@ public class PersonServiceTest {
 	@Autowired
 	private PersonService personService;
 }
-``
+```
 
 As the test is using the SpringJUnit4ClassRunner we also need a context xml configuration file.  Here we tell spring to scan for beans and we also setup Hibernate and the in-memory database.
 ````xml
