@@ -8,7 +8,7 @@ Dependencies
 
 This project will be built using Apache Maven.  Here is the complete POM file with all of the dependencies that we will need:
 
-
+```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
@@ -108,13 +108,13 @@ This project will be built using Apache Maven.  Here is the complete POM file wi
 		</dependency>
 	</dependencies>
 </project>
-
+```
 
 Entity
 ======
 
 For this simple project we will create a single “Person” Entity with attributes for their title, first name and last name.  We will also declare a query that we will make use of later.
-
+```java
 package example.entity;
 
 import javax.persistence.Entity;
@@ -164,9 +164,9 @@ public class Person {
 		this.lastName = lastName;
 	}
 }
-
+```
 We also need to setup a persistence.xml file for hibernate to use:
-
+```xml
 <persistence xmlns="http://java.sun.com/xml/ns/persistence"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
@@ -183,14 +183,14 @@ We also need to setup a persistence.xml file for hibernate to use:
 		</properties>
 	</persistence-unit>
 </persistence>
-
+```
 
 Service
 =======
 
 We need to have something to test so we’ll create a simple service that lets us search our Person entity using the named query from above:
 
-
+```java
 package example.service;
 
 import java.util.List;
@@ -219,13 +219,13 @@ public class PersonService {
 	}
 }
 
-
+```
 Testing
 =======
 
 To make sure that our service is working we need to create a JUnit test.  Here is the basic structure of the test class:
 
-
+```java
 package example.service;
 
 import static junit.framework.Assert.assertEquals;
@@ -254,10 +254,10 @@ public class PersonServiceTest {
 	@Autowired
 	private PersonService personService;
 }
-
+``
 
 As the test is using the SpringJUnit4ClassRunner we also need a context xml configuration file.  Here we tell spring to scan for beans and we also setup Hibernate and the in-memory database.
-
+````xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -291,26 +291,26 @@ As the test is using the SpringJUnit4ClassRunner we also need a context xml conf
 		<property name="entityManagerFactory" ref="entityManagerFactory" />
 	</bean>
 </beans>
-
+```
 
 We can now create a test method to check that the service can find entities:
-
+```java
 @Test
 public void testFind() throws Exception {
 	List<Person> personList = personService.find("hil");
 	assertEquals(1, personList.size());
 	assertEquals("Phillip", personList.get(0).getFirstName());
 }
-
+```
 At this point the test should fail because the returned personList contains 0 items.  To make sure that the test passes we need to insert some database data.  This is where DBUnit comes in.  You may have noticed that the TestExecutionListeners annotation includes a reference to DbUnitTestExecutionListener.  This means that we can use the @DatabaseSetup annotation on the test method to configure the database from a flat XML file.  The xml file follows the standard DBUnit conventions:
-
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <dataset>
 	<Person id="0" title="Mr" firstName="Phillip" lastName="Webb"/>
 	<Person id="1" title="Mr" firstName="Fred" lastName="Bloggs"/>
 </dataset>
-
-
+```
+```java
 @Test
 @DatabaseSetup("sampleData.xml")
 public void testFind() throws Exception {
@@ -318,14 +318,14 @@ public void testFind() throws Exception {
 	assertEquals(1, personList.size());
 	assertEquals("Phillip", personList.get(0).getFirstName());
 }
-
+```
 DBUnit should now execute before the test method runs to insert appropriate data into the database.  As a result the test should pass.
 
 Testing expected data
 =====================
 
 As well as configuring the database before a test runs it is also possible to verify database set after the test completes.  Let’s update our service with a method to remove entities:
-
+```java
 ...
 public class PersonService {
 ...
@@ -334,23 +334,23 @@ public class PersonService {
 		entityManager.remove(person);
 	}
 ...
-
+```
 The method to test if remove works can use the @ExpectedDatabase annotation.  This will use DBUnit to ensure that the database contains expected data after the test method has finshed.  
-
+```java
 @Test
 @DatabaseSetup("sampleData.xml")
 @ExpectedDatabase("expectedData.xml")
 public void testRemove() throws Exception {
 	personService.remove(1);
 }
-
+```
 The sampleData.xml file is shown below:
-
+````xml
 <?xml version="1.0" encoding="UTF-8"?>
 <dataset>
 	<Person id="0" title="Mr" firstName="Phillip" lastName="Webb"/>
 </dataset>
-
+``` 
 
 Summary
 =======
